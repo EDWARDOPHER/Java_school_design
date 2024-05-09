@@ -1,5 +1,3 @@
-package ChatRoom;
-
 import java.io.*;
 import java.net.*;
 import javax.swing.*;

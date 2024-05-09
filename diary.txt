@@ -1,3 +1,9 @@
 Server is running...
 New client connected: Socket[addr=/127.0.0.1,port=56395,localport=12345]
 New client connected: Socket[addr=/127.0.0.1,port=60640,localport=12345]
+Server is running...
+New client connected: Socket[addr=/127.0.0.1,port=51599,localport=12345]
+New client connected: Socket[addr=/127.0.0.1,port=51652,localport=12345]
+New client connected: Socket[addr=/127.0.0.1,port=49743,localport=12345]
+Server is running...
+Server is running... 2024-05-09T20:58:31.615924800

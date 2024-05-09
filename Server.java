@@ -1,8 +1,7 @@
-package ChatRoom;
-
 import java.io.*;
 import java.net.*;
 import java.util.*;
+import java.time.LocalDateTime;;
 
 public class Server {
     private ServerSocket serverSocket;
@@ -19,10 +18,16 @@ public class Server {
     }
 
     public void start() {
-        log("Server is running...");
-        while (true) {
+        LocalDateTime now = LocalDateTime.now();
+        System.out.println("Server is running");
+        log("Server is running... " + now);
+        boolean isStart = true;
+        while (isStart) {
             try {
                 Socket socket = serverSocket.accept();
+                System.out.println("New client connected: " + socket);
+                System.out.println("To end server enter: \'end\'");
+
                 log("New client connected: " + socket);
 
                 // Create a new thread to handle this client
