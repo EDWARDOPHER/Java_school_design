@@ -6,7 +6,7 @@ import java.time.format.DateTimeFormatter;
 
 public class Server {
     private ServerSocket serverSocket;  // socket
-    private List<ClientHandler> clients = new ArrayList<>(); // 
+    private List<ClientHandler> clients = new ArrayList<>();
     private PrintWriter logWriter; // 日志记录
     private boolean running = true;
 
@@ -25,7 +25,7 @@ public class Server {
             }else
                 logWriter = new PrintWriter(new BufferedWriter(new FileWriter(logFilePath, true)));
         }catch (IOException e) {
-            System.out.println("1");
+            System.out.println("Server初始化错误");
             e.printStackTrace();
         }
     }
@@ -33,14 +33,16 @@ public class Server {
     // server启动方法
     public void start() {
         System.out.println("日志文件流创建成功，可以接收系统运行日志文件了，全民大聊天正式开始");
-        log("日志文件流创建成功，可以接收系统运行日志文件了，全民大聊天正式开始");
+        time = LocalTime.now();
+        currTime = time.format(formatter);
+        log("[" + currTime + "]" + " 系统启动...\n");
         
         // 监听用户是否想结束server
         Thread consoleInputThread = new Thread(() -> {
             BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
             try {
                 while (running) {
-                    System.out.println("结束聊天服务器请在控制台输入指令： \'end\'");
+                    System.out.println("结束聊天服务器请在控制台输入指令：end");
                     String input = reader.readLine();
                     if (input.equalsIgnoreCase("end")) {
                         stopServer();
@@ -48,8 +50,7 @@ public class Server {
                     }
                 }
             } catch (IOException e) {
-                System.out.println("***管理员在控制台结束了server运行***");
-                log("***管理员在控制台结束了server运行***");
+                e.printStackTrace();
             }
         });
         consoleInputThread.start();
@@ -57,14 +58,15 @@ public class Server {
         // 监听client连接
         while (running) {
             try {
-                Socket socket = serverSocket.accept();
+                Socket clientSocket = serverSocket.accept();
 
-                ClientHandler handler = new ClientHandler(socket);
+                // System.out.println("new client: " + clientSocket.getInetAddress().getHostAddress());
+
+                ClientHandler handler = new ClientHandler(clientSocket);
                 clients.add(handler);
                 handler.start();
             } catch (IOException e) {
-                System.out.println("\n***管理员在控制台结束了server运行***\n");
-                log("***管理员在控制台结束了server运行***");
+                // System.out.println("\n聊天已终止，已与所有客户端中断连接\n");
             }
         }
     }
@@ -73,11 +75,15 @@ public class Server {
     private void stopServer() {
         running = false;
         try {
-
+            for(ClientHandler client : clients){
+                client.shutDown();
+            }
+            System.out.println("\n聊天已终止，已与所有客户端中断连接\n");
+            clients.clear();
             serverSocket.close();
             logWriter.close();
+            System.exit(1);
         } catch (IOException e) {
-            System.out.println("3");
             e.printStackTrace();
         }
     }
@@ -129,21 +135,22 @@ public class Server {
                 time = LocalTime.now();
                 currTime = time.format(formatter);
                 
-                System.out.println(currTime + "欢迎" + username + "进入聊天室！");
-                broadcast(currTime + "欢迎" + username + "进入聊天室！");
-                log(currTime + "欢迎" + username + "进入聊天室！");
+                System.out.println('[' + currTime + ']' + " 欢迎" + username + "进入聊天室！");
+                broadcast('[' + currTime + ']' + " 欢迎" + username + "进入聊天室！");
+                log('[' + currTime + ']' + " 欢迎" + username + "进入聊天室！");
 
                 String message;
                 while ((message = in.readLine()) != null) {
                     time = LocalTime.now();
                     currTime = time.format(formatter);
+                    if(message.equals(""))
+                        continue;
                     System.out.println("[" + username + " " + currTime + "] " + message);
                     broadcast("[" + username + " " + currTime + "] " + message);
                     log("[" + username + " " + currTime + "] " + message);
                 }
             } catch (IOException e) {
-                System.out.println("5");
-                e.printStackTrace();
+                System.out.println("IOException error from ClientHandler.run01");
             } finally {
                 try {
                     broadcast(username + " 退出了聊天室");
@@ -152,8 +159,7 @@ public class Server {
                     socket.close();
                     clients.remove(this);
                 } catch (IOException e) {
-                    System.out.println("6");
-                    e.printStackTrace();
+                    System.out.println("IOException error from ClientHandler.run02");
                 }
             }
         }
@@ -162,6 +168,15 @@ public class Server {
         private void broadcast(String message) {
             for (ClientHandler client : clients) {
                 client.out.println(message);
+            }
+        }
+
+        public void shutDown(){
+            try{
+                out.println("1");
+                socket.close();
+            }catch(IOException e){
+                e.printStackTrace();
             }
         }
     }

@@ -8,37 +8,33 @@ public class Client {
     private Socket socket;
     private BufferedReader in;
     private PrintWriter out;
-    private JFrame frame = new JFrame("Chat Client");
+    private JFrame frame = new JFrame("全民聊天室---by计科223李星原");
     private JTextField ipAddressField = new JTextField(20);
     private JTextField portField = new JTextField(10);
     private JTextField usernameField = new JTextField(20);
-    private JButton joinButton = new JButton("Join Chat Room");
-    private JButton exitButton = new JButton("Exit Chat Room");
+    private JButton joinButton = new JButton("进入聊天室");
+    private JButton exitButton = new JButton("退出聊天室");
     private JTextArea chatArea = new JTextArea(15, 40);
     private JTextArea inputArea = new JTextArea(3, 30);
-    private JButton sendButton = new JButton("Send");
+    private JButton sendButton = new JButton("发送");
 
     private String username;
 
     public Client() {
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
-        // IP Address field
-        ipAddressField.setEditable(false);
+        ipAddressField.setEditable(true);
         ipAddressField.setText("localhost");
 
-
-        // Port field
         portField.setEditable(false);
-        portField.setText("12345"); // Will be updated after connecting to server
+        portField.setText("12345");
 
-        // Layout
         JPanel topPanel = new JPanel(new FlowLayout());
-        topPanel.add(new JLabel("IP Address:"));
+        topPanel.add(new JLabel("IP:"));
         topPanel.add(ipAddressField);
-        topPanel.add(new JLabel("Port:"));
+        topPanel.add(new JLabel("端口:"));
         topPanel.add(portField);
-        topPanel.add(new JLabel("Username:"));
+        topPanel.add(new JLabel("昵称:"));
         topPanel.add(usernameField);
         topPanel.add(joinButton);
         topPanel.add(exitButton);
@@ -46,13 +42,13 @@ public class Client {
 
         JPanel centerPanel = new JPanel(new BorderLayout());
         centerPanel.add(new JScrollPane(chatArea), BorderLayout.CENTER);
+        chatArea.setEditable(false);
         JPanel inputPanel = new JPanel(new FlowLayout());
         inputPanel.add(new JScrollPane(inputArea));
         inputPanel.add(sendButton);
         centerPanel.add(inputPanel, BorderLayout.SOUTH);
         frame.getContentPane().add(centerPanel, BorderLayout.CENTER);
 
-        // Button listeners
         joinButton.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
                 joinChatRoom();
@@ -83,6 +79,11 @@ public class Client {
         if (!username.isEmpty()) {
             try {
                 socket = new Socket(serverAddress, port);
+
+                JOptionPane.showMessageDialog(frame, "已经与聊天室服务器建立连接", "消息", JOptionPane.INFORMATION_MESSAGE);
+                ipAddressField.setEditable(false);
+
+
                 in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
                 out = new PrintWriter(socket.getOutputStream(), true);
 
@@ -90,20 +91,25 @@ public class Client {
                 joinButton.setEnabled(false);
                 exitButton.setEnabled(true);
 
-                // Start receiving messages
                 Thread receiveThread = new Thread(() -> {
                     try {
                         String line;
                         while ((line = in.readLine()) != null) {
-                            chatArea.append(line + "\n");
+                            if(line.equals("1")){
+                                JOptionPane.showMessageDialog(frame, "与聊天室服务器失去连接", "错误", JOptionPane.ERROR_MESSAGE);
+                                joinButton.setEnabled(true);
+                                exitButton.setEnabled(false);
+                            }
+                            else
+                                chatArea.append(line + "\n");
                         }
                     } catch (IOException e) {
-                        e.printStackTrace();
+                        // e.printStackTrace();
                     }
                 });
                 receiveThread.start();
             } catch (IOException e) {
-                e.printStackTrace();
+                JOptionPane.showMessageDialog(frame, "与聊天室服务器连接建立失败", "错误", JOptionPane.ERROR_MESSAGE);
             }
         }
     }
@@ -111,12 +117,13 @@ public class Client {
     private void exitChatRoom() {
         if (socket != null) {
             try {
-                chatArea.append(username + " has exited the char.\n");
+                chatArea.append(username + " 退出聊天室\n");
+                ipAddressField.setEditable(true);
                 socket.close();
                 joinButton.setEnabled(true);
                 exitButton.setEnabled(false);
             } catch (IOException e) {
-                e.printStackTrace();
+                // e.printStackTrace();
             }
         }
     }

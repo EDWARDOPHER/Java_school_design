@@ -1,0 +1,2 @@
+- 服务器ip 和client ip 还有端口直接如何分配和建立联系
+- Thread 一定要按照try catch的方式写吗
