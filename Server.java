@@ -107,8 +107,10 @@ public class Server {
         }
 
         public void run() {
+            String username = "";
             try {
-                String username = in.readLine();
+                username = in.readLine();
+
                 broadcast(username + " has joined the chat.");
                 log(username + " has joined the chat.");
 
@@ -121,6 +123,9 @@ public class Server {
                 e.printStackTrace();
             } finally {
                 try {
+                    broadcast(username + " has exited the chat.");
+                    log(username + " has exited the chat.");
+                    System.out.println("socket close");
                     socket.close();
                     clients.remove(this);
                 } catch (IOException e) {
