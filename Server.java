@@ -1,36 +1,42 @@
-import java.io.*;
-import java.net.*;
-import java.util.*;
-import java.time.LocalTime;
+import java.io.*;   // 文件读写
+import java.net.*;  // java 网络编程
+import java.util.*; 
+import java.time.LocalTime; // 时间
 import java.time.format.DateTimeFormatter;
 
 public class Server {
-    private ServerSocket serverSocket;  // socket
+    /**
+     * @param List 列表: 可以添加，获取，删除元素，可以判断元素的索引
+     * 常用方法：
+     * add(): 添加元素， remove(): 移除， get(): 获取元素， contains(): 是否包含某个元素
+     * 
+     * @param PrintWriter 往文件里写入操作
+     */
+    private ServerSocket serverSocket;  // 服务端
     private List<ClientHandler> clients = new ArrayList<>();
     private PrintWriter logWriter; // 日志记录
-    private boolean running = true;
+    private boolean running = true; // 服务器启动
 
+    // 获取本地时间，并且按照hh:mm:ss的格式输出
     private LocalTime time;
     DateTimeFormatter formatter = DateTimeFormatter.ofPattern("HH:mm:ss");
     String currTime;
 
-    // 该类分配端口号和日志记录
     public Server(int port, String logFilePath) {
         try {
-            serverSocket = new ServerSocket(port);
-            File logFile = new File(logFilePath);
+            serverSocket = new ServerSocket(port);  // 给服务器分配端口号
+            File logFile = new File(logFilePath);   // 查看日志文件是否存在
             if(!logFile.exists()){
                 System.err.println("\n您给出的日志文件不存在，请确认路径是否正确：" + logFilePath + '\n');
                 System.exit(1);
             }else
-                logWriter = new PrintWriter(new BufferedWriter(new FileWriter(logFilePath, true)));
+                logWriter = new PrintWriter(new BufferedWriter(new FileWriter(logFilePath, true)));     // 确定写入日志文件
         }catch (IOException e) {
             System.out.println("Server初始化错误");
-            e.printStackTrace();
         }
     }
 
-    // server启动方法
+    // 启动方法
     public void start() {
         System.out.println("日志文件流创建成功，可以接收系统运行日志文件了，全民大聊天正式开始");
         time = LocalTime.now();
@@ -38,7 +44,7 @@ public class Server {
         log("[" + currTime + "]" + " 系统启动...\n");
         
         // 监听用户是否想结束server
-        Thread consoleInputThread = new Thread(() -> {
+        Thread consoleEnd = new Thread(() -> {
             BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
             try {
                 while (running) {
@@ -50,34 +56,29 @@ public class Server {
                     }
                 }
             } catch (IOException e) {
-                e.printStackTrace();
+                System.out.println("IOException from consoleEnd");
             }
         });
-        consoleInputThread.start();
+        consoleEnd.start();
 
         // 监听client连接
         while (running) {
             try {
                 Socket clientSocket = serverSocket.accept();
 
-                // System.out.println("new client: " + clientSocket.getInetAddress().getHostAddress());
-
                 ClientHandler handler = new ClientHandler(clientSocket);
                 clients.add(handler);
                 handler.start();
             } catch (IOException e) {
-                // System.out.println("\n聊天已终止，已与所有客户端中断连接\n");
+                System.out.println("IOException from start(running)");
             }
         }
     }
 
-    // 用来结束server
+    // 关机方法
     private void stopServer() {
         running = false;
         try {
-            for(ClientHandler client : clients){
-                client.shutDown();
-            }
             System.out.println("\n聊天已终止，已与所有客户端中断连接\n");
             clients.clear();
             serverSocket.close();
@@ -101,6 +102,7 @@ public class Server {
         server.start();
     }
 
+    // 日志记录方法
     private void log(String message) {
         if(logWriter == null){
             System.out.println("日志文件存在问题，写入异常");
@@ -110,21 +112,19 @@ public class Server {
         logWriter.flush();
     }
 
-    // client处理线程
+    // client类
     private class ClientHandler extends Thread {
         private Socket socket;
         private BufferedReader in;  // client传回的消息
         private PrintWriter out;    // 写入client的消息
 
-        // 初始化操作
         public ClientHandler(Socket socket) {
             this.socket = socket;
             try {
                 in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
                 out = new PrintWriter(socket.getOutputStream(), true);
             } catch (IOException e) {
-                System.out.println("4");
-                e.printStackTrace();
+                System.out.println("IOException from ClientHadler constructor");
             }
         }
 
@@ -171,13 +171,5 @@ public class Server {
             }
         }
 
-        public void shutDown(){
-            try{
-                out.println("1");
-                socket.close();
-            }catch(IOException e){
-                e.printStackTrace();
-            }
-        }
     }
 }

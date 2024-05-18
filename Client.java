@@ -49,6 +49,8 @@ public class Client {
         centerPanel.add(inputPanel, BorderLayout.SOUTH);
         frame.getContentPane().add(centerPanel, BorderLayout.CENTER);
 
+        exitButton.setEnabled(false);
+
         joinButton.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
                 joinChatRoom();
@@ -95,22 +97,22 @@ public class Client {
                     try {
                         String line;
                         while ((line = in.readLine()) != null) {
-                            if(line.equals("1")){
-                                JOptionPane.showMessageDialog(frame, "与聊天室服务器失去连接", "错误", JOptionPane.ERROR_MESSAGE);
-                                joinButton.setEnabled(true);
-                                exitButton.setEnabled(false);
-                            }
-                            else
-                                chatArea.append(line + "\n");
+                            chatArea.append(line + "\n");
                         }
                     } catch (IOException e) {
-                        // e.printStackTrace();
+                        System.out.println("与服务器断开连接");
+                        JOptionPane.showMessageDialog(frame, "与聊天室服务器失去连接", "错误", JOptionPane.ERROR_MESSAGE);
+                        joinButton.setEnabled(true);
+                        exitButton.setEnabled(false);
                     }
                 });
                 receiveThread.start();
             } catch (IOException e) {
                 JOptionPane.showMessageDialog(frame, "与聊天室服务器连接建立失败", "错误", JOptionPane.ERROR_MESSAGE);
             }
+        }
+        else{
+            JOptionPane.showMessageDialog(frame, "昵称不能为空", "消息", JOptionPane.INFORMATION_MESSAGE);
         }
     }
 
